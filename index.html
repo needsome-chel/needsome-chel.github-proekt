@@ -3,23 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>VR Панорама 360° - Улица / Комната</title>
+    <title>VR Панорама 360° - Гироскоп | Улица / Комната</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            user-select: none; /* Убираем выделение на мобильных */
+            user-select: none;
         }
         body {
             margin: 0;
             overflow: hidden;
             font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
             background-color: #000;
-            touch-action: none; /* Улучшает управление на тачскринах */
+            touch-action: none;
         }
         
-        /* --- ВЫДВИЖНОЕ МЕНЮ СПРАВА --- */
+        /* ВЫДВИЖНОЕ МЕНЮ СПРАВА */
         .menu-container {
             position: fixed;
             right: 0;
@@ -32,12 +32,11 @@
             pointer-events: none;
         }
         
-        /* Кнопка-триггер (панель) */
         .menu-trigger {
             pointer-events: auto;
-            background: rgba(0, 0, 0, 0.75);
+            background: rgba(0, 0, 0, 0.8);
             backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 136, 0, 0.6);
+            border: 1px solid rgba(255, 136, 0, 0.7);
             border-right: none;
             border-radius: 30px 0 0 30px;
             padding: 14px 12px 14px 18px;
@@ -52,29 +51,13 @@
             box-shadow: -2px 2px 12px rgba(0,0,0,0.4);
         }
         
-        .menu-trigger:hover {
-            background: #ff8800;
-            color: #1e2a3a;
-            border-color: #ffaa44;
-        }
+        .menu-trigger:active { transform: scale(0.97); background: #ff8800; color: #1e2a3a; }
+        .menu-icon { font-size: 22px; }
+        .menu-text { font-size: 14px; letter-spacing: 1px; }
         
-        .menu-trigger:active {
-            transform: scale(0.97);
-        }
-        
-        .menu-icon {
-            font-size: 22px;
-        }
-        
-        .menu-text {
-            font-size: 14px;
-            letter-spacing: 1px;
-        }
-        
-        /* Само выдвижное меню */
         .menu-panel {
             pointer-events: auto;
-            background: rgba(20, 20, 30, 0.92);
+            background: rgba(20, 20, 30, 0.94);
             backdrop-filter: blur(20px);
             border-radius: 24px 0 0 24px;
             border: 1px solid rgba(255, 136, 0, 0.5);
@@ -87,9 +70,7 @@
             box-shadow: -4px 4px 20px rgba(0,0,0,0.5);
         }
         
-        .menu-panel.open {
-            transform: translateX(0);
-        }
+        .menu-panel.open { transform: translateX(0); }
         
         .menu-title {
             color: #ffaa66;
@@ -99,7 +80,6 @@
             border-bottom: 1px solid rgba(255,255,255,0.2);
             margin-bottom: 12px;
             text-align: center;
-            letter-spacing: 1px;
         }
         
         .scene-option {
@@ -120,23 +100,11 @@
             gap: 10px;
         }
         
-        .scene-option:hover {
-            background: #ff8800;
-            color: #1e2a3a;
-            transform: translateX(-4px);
-        }
+        .scene-option:hover, .scene-option:active { background: #ff8800; color: #1e2a3a; transform: translateX(-4px); }
+        .scene-option.active-opt { background: #ff8800; color: #1e2a3a; box-shadow: 0 0 8px rgba(255,136,0,0.5); }
+        .opt-icon { font-size: 20px; }
         
-        .scene-option.active-opt {
-            background: #ff8800;
-            color: #1e2a3a;
-            box-shadow: 0 0 8px rgba(255,136,0,0.5);
-        }
-        
-        .opt-icon {
-            font-size: 20px;
-        }
-        
-        /* Кнопка VR (оставляем справа сверху, но не мешаем меню) */
+        /* VR панель справа сверху */
         .vr-panel {
             position: fixed;
             top: 20px;
@@ -163,13 +131,10 @@
             transition: 0.2s;
         }
         
-        .vr-button:hover {
-            background: #8a4fc9;
-            transform: scale(1.02);
-        }
+        .vr-button:active { transform: scale(0.97); background: #8a4fc9; }
         
         .vr-status {
-            background: rgba(0,0,0,0.65);
+            background: rgba(0,0,0,0.7);
             backdrop-filter: blur(8px);
             padding: 5px 12px;
             border-radius: 50px;
@@ -180,17 +145,17 @@
             border-left: 3px solid #ff8800;
         }
         
-        /* Подсказки (слева вверху) */
+        /* Подсказки слева вверху */
         .hint-box {
             position: fixed;
             top: 20px;
             left: 20px;
-            background: rgba(0, 0, 0, 0.55);
+            background: rgba(0, 0, 0, 0.6);
             backdrop-filter: blur(8px);
             padding: 8px 14px;
             border-radius: 28px;
             color: #f0f0f0;
-            font-size: 12px;
+            font-size: 11px;
             font-family: monospace;
             z-index: 100;
             pointer-events: none;
@@ -200,84 +165,49 @@
             gap: 10px;
         }
         
-        .hint-box span {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-        }
-        
         /* Адаптация для телефонов */
         @media (max-width: 700px) {
-            .menu-panel {
-                width: 170px;
-                padding: 8px 6px 8px 12px;
-            }
-            .scene-option {
-                padding: 8px 10px;
-                font-size: 13px;
-            }
-            .menu-trigger {
-                padding: 10px 8px 10px 14px;
-            }
-            .menu-text {
-                display: none; /* на телефоне скрываем текст, оставляем иконку */
-            }
-            .menu-trigger {
-                padding: 12px 10px;
-            }
-            .menu-icon {
-                font-size: 24px;
-            }
-            .hint-box {
-                font-size: 9px;
-                top: 12px;
-                left: 12px;
-                padding: 5px 10px;
-                gap: 6px;
-            }
-            .vr-panel {
-                top: 12px;
-                right: 12px;
-            }
-            .vr-button {
-                padding: 6px 14px;
-                font-size: 12px;
-            }
-            .vr-status {
-                font-size: 9px;
-                padding: 3px 8px;
-            }
+            .menu-panel { width: 170px; padding: 8px 6px 8px 12px; }
+            .scene-option { padding: 8px 10px; font-size: 13px; }
+            .menu-trigger { padding: 10px 8px 10px 14px; }
+            .menu-text { display: none; }
+            .menu-icon { font-size: 24px; }
+            .hint-box { font-size: 9px; top: 12px; left: 12px; padding: 5px 10px; gap: 6px; }
+            .vr-panel { top: 12px; right: 12px; }
+            .vr-button { padding: 6px 14px; font-size: 12px; }
+            .vr-status { font-size: 9px; padding: 3px 8px; }
         }
         
-        /* Для очень маленьких экранов ещё компактнее */
-        @media (max-width: 480px) {
-            .hint-box span:last-child {
-                display: none; /* на узких телефонах прячем часть подсказки, но оставляем главное */
-            }
-            .hint-box span:first-child {
-                font-size: 8px;
-            }
-        }
+        .vr-error { background: rgba(200, 60, 50, 0.85); color: white; }
+        button { touch-action: manipulation; }
         
-        /* Стиль ошибки VR */
-        .vr-error {
-            background: rgba(200, 60, 50, 0.85);
-            color: white;
-        }
-        
-        /* Отключаем выделение на кнопках */
-        button {
-            touch-action: manipulation;
+        /* Индикатор ориентации (для мобильных) */
+        .orientation-toast {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            color: #ffaa66;
+            padding: 6px 14px;
+            border-radius: 40px;
+            font-size: 12px;
+            z-index: 300;
+            white-space: nowrap;
+            pointer-events: none;
+            backdrop-filter: blur(4px);
+            font-weight: bold;
+            transition: opacity 0.5s;
         }
     </style>
 </head>
 <body>
 
-    <!-- ВЫДВИЖНОЕ МЕНЮ СПРАВА -->
+    <!-- ВЫДВИЖНОЕ МЕНЮ -->
     <div class="menu-container">
         <div class="menu-trigger" id="menuTrigger">
             <span class="menu-icon">📁</span>
-            <span class="menu-text">Выбор сцены</span>
+            <span class="menu-text">Сцены</span>
         </div>
         <div class="menu-panel" id="menuPanel">
             <div class="menu-title">Панорамы 360°</div>
@@ -290,19 +220,18 @@
         </div>
     </div>
     
-    <!-- VR панель (справа сверху) -->
+    <!-- VR панель -->
     <div class="vr-panel">
         <button id="customVRBtn" class="vr-button">🥽 VR режим</button>
         <div id="vrSupportStatus" class="vr-status">🕶️ Проверка VR...</div>
     </div>
     
-    <!-- Подсказки управления (слева вверху) -->
-    <div class="hint-box">
+    <!-- Подсказки -->
+    <div class="hint-box" id="hintBox">
         <span>🖱️ Мышь / Палец: вращение</span>
-        <span>🔍 Колесико / Жест: приближение</span>
+        <span>🔍 Жест: приближение</span>
     </div>
 
-    <!-- Импорт Three.js -->
     <script type="importmap">
         {
             "imports": {
@@ -320,13 +249,12 @@
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0x030318);
         
-        // Камера: стандартный FOV, гибкий зум через FOV
         const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 1000);
         camera.position.set(0, 0, 0.1);
         
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.xr.enabled = true;   // VR режим
+        renderer.xr.enabled = true;
         document.body.appendChild(renderer.domElement);
         
         // --- Панорамная сфера ---
@@ -334,13 +262,13 @@
         const sphere = new THREE.Mesh(geometry);
         scene.add(sphere);
         
-        // --- Загрузка текстур из папки img ---
+        // Пути к текстурам
         const textures = {
             street: 'img/street.jpg',
             room: 'img/room.jpg'
         };
         
-        let currentSceneId = 'street';   // 'street' или 'room'
+        let currentSceneId = 'street';
         
         function loadPanorama(imagePath) {
             const loader = new THREE.TextureLoader();
@@ -352,12 +280,11 @@
                         side: THREE.BackSide
                     });
                     sphere.material = material;
-                    console.log('✅ Загружена панорама:', imagePath);
+                    console.log('✅ Загружено:', imagePath);
                 },
                 undefined,
                 (error) => {
                     console.error('❌ Ошибка:', imagePath, error);
-                    // Запасной цвет (розовый — чтобы видеть ошибку)
                     const fallbackMat = new THREE.MeshBasicMaterial({ color: 0xff4488, side: THREE.BackSide });
                     sphere.material = fallbackMat;
                     alert(`Не удалось загрузить ${imagePath}\nПроверьте папку img/`);
@@ -365,25 +292,24 @@
             );
         }
         
-        // Стартовая загрузка
         loadPanorama(textures.street);
         
-        // --- Управление: вращение мышью/пальцем + зум через FOV (усиленный) ---
+        // --- Управление: для мыши/пальца (OrbitControls) и для VR (гироскоп) ---
+        // Для обычного режима используем OrbitControls с вращением
         const controls = new OrbitControls(camera, renderer.domElement);
-        controls.enableZoom = false;     // отключаем стандартный зум
+        controls.enableZoom = false;
         controls.enablePan = false;
         controls.rotateSpeed = 1.0;
         controls.target.set(0, 0, 0);
         
-        // Настройки усиленного зума (приближение до ~5-6 раз)
-        const MIN_FOV = 14;      // сильное приближение
-        const MAX_FOV = 100;     // широкий угол
+        // Настройка зума через FOV (усиленный)
+        const MIN_FOV = 14;
+        const MAX_FOV = 100;
         camera.fov = 70;
         camera.updateProjectionMatrix();
         
-        // Функция изменения зума
         function handleZoom(deltaY) {
-            if (renderer.xr.isPresenting) return; // в VR не мешаем
+            if (renderer.xr.isPresenting) return;
             let delta = deltaY * 0.08;
             let newFOV = camera.fov + delta;
             newFOV = Math.min(MAX_FOV, Math.max(MIN_FOV, newFOV));
@@ -393,7 +319,7 @@
             }
         }
         
-        // Поддержка колесика мыши
+        // Колесико мыши
         window.addEventListener('wheel', (e) => {
             if (!renderer.xr.isPresenting) {
                 handleZoom(e.deltaY);
@@ -401,7 +327,7 @@
             }
         }, { passive: false });
         
-        // Для телефонов: поддержка pinch-to-zoom через определение жестов (двумя пальцами)
+        // Пинч-зум для телефонов
         let initialPinchDistance = 0;
         let initialFOV = camera.fov;
         
@@ -424,7 +350,6 @@
             if (e.touches.length === 2 && initialPinchDistance > 0 && !renderer.xr.isPresenting) {
                 const newDistance = getPinchDistance(e.touches);
                 const scale = newDistance / initialPinchDistance;
-                // Изменяем FOV: сжатие пальцев -> уменьшение FOV (приближение)
                 let newFOV = initialFOV / scale;
                 newFOV = Math.min(MAX_FOV, Math.max(MIN_FOV, newFOV));
                 camera.fov = newFOV;
@@ -433,49 +358,95 @@
             }
         }, { passive: false });
         
-        window.addEventListener('touchend', (e) => {
-            initialPinchDistance = 0;
-        });
+        window.addEventListener('touchend', () => { initialPinchDistance = 0; });
         
-        // --- ВЫДВИЖНОЕ МЕНЮ (логика открытия/закрытия) ---
+        // --- ГИРОСКОП ДЛЯ VR НА ТЕЛЕФОНЕ (DeviceOrientation) ---
+        // Когда VR режим активен, мы используем показания гироскопа для поворота камеры
+        let vrOrientationEnabled = false;
+        let currentEuler = new THREE.Euler(0, 0, 0, 'YXZ');
+        let finalQuaternion = new THREE.Quaternion();
+        
+        // Функция для запроса разрешения на гироскоп (iOS 13+ требует разрешения)
+        function requestDeviceOrientation() {
+            if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+                // iOS: нужно разрешение от пользователя
+                const btn = document.createElement('button');
+                btn.textContent = '🔐 Разрешить поворот телефона';
+                btn.style.position = 'fixed';
+                btn.style.bottom = '30px';
+                btn.style.left = '50%';
+                btn.style.transform = 'translateX(-50%)';
+                btn.style.zIndex = '1000';
+                btn.style.padding = '12px 24px';
+                btn.style.background = '#ff8800';
+                btn.style.border = 'none';
+                btn.style.borderRadius = '40px';
+                btn.style.fontWeight = 'bold';
+                btn.style.color = '#1e2a3a';
+                btn.style.cursor = 'pointer';
+                btn.style.boxShadow = '0 0 15px rgba(0,0,0,0.5)';
+                document.body.appendChild(btn);
+                
+                btn.addEventListener('click', () => {
+                    DeviceOrientationEvent.requestPermission()
+                        .then(response => {
+                            if (response === 'granted') {
+                                window.addEventListener('deviceorientation', handleOrientation);
+                                btn.remove();
+                            }
+                        })
+                        .catch(console.error);
+                });
+                return false;
+            } else {
+                // Android и другие: сразу добавляем слушатель
+                window.addEventListener('deviceorientation', handleOrientation);
+                return true;
+            }
+        }
+        
+        let alpha = 0, beta = 0, gamma = 0;
+        
+        function handleOrientation(event) {
+            if (!vrOrientationEnabled) return;
+            // alpha: compass (0-360), beta: front-back (-180..180), gamma: left-right (-90..90)
+            alpha = event.alpha || 0;
+            beta = event.beta || 0;
+            gamma = event.gamma || 0;
+            
+            // Конвертируем в радианы и применяем к камере
+            // Традиционная схема: gamma - поворот влево-вправо (yaw), beta - наклон вверх-вниз (pitch)
+            // Для панорамы: вращение по горизонтали (yaw) = -gamma, по вертикали = -beta
+            const yaw = (gamma || 0) * Math.PI / 180;
+            const pitch = (beta || 0) * Math.PI / 180;
+            const roll = (alpha || 0) * Math.PI / 180;
+            
+            // Создаем кватернион из углов Эйлера (порядок YXZ)
+            currentEuler.set(pitch, yaw, roll, 'YXZ');
+            finalQuaternion.setFromEuler(currentEuler);
+            camera.quaternion.copy(finalQuaternion);
+        }
+        
+        // --- МЕНЮ (выдвижное) ---
         const menuTrigger = document.getElementById('menuTrigger');
         const menuPanel = document.getElementById('menuPanel');
         const sceneOptions = document.querySelectorAll('.scene-option');
         
-        function toggleMenu() {
-            menuPanel.classList.toggle('open');
-        }
+        function toggleMenu() { menuPanel.classList.toggle('open'); }
+        function closeMenu() { menuPanel.classList.remove('open'); }
         
-        function closeMenu() {
-            menuPanel.classList.remove('open');
-        }
-        
-        menuTrigger.addEventListener('click', (e) => {
-            e.stopPropagation();
-            toggleMenu();
-        });
-        
-        // Клик вне меню -> закрыть (на документа)
+        menuTrigger.addEventListener('click', (e) => { e.stopPropagation(); toggleMenu(); });
         document.addEventListener('click', (e) => {
-            // Если клик не по триггеру и не внутри панели
-            if (!menuTrigger.contains(e.target) && !menuPanel.contains(e.target)) {
-                closeMenu();
-            }
+            if (!menuTrigger.contains(e.target) && !menuPanel.contains(e.target)) closeMenu();
         });
         
-        // Обработка выбора сцены из меню
         sceneOptions.forEach(option => {
             option.addEventListener('click', (e) => {
                 const sceneId = option.getAttribute('data-scene');
-                if (sceneId === currentSceneId) {
-                    closeMenu();
-                    return;
-                }
-                // Обновляем активную кнопку в меню
+                if (sceneId === currentSceneId) { closeMenu(); return; }
                 sceneOptions.forEach(opt => opt.classList.remove('active-opt'));
                 option.classList.add('active-opt');
                 
-                // Загружаем новую панораму
                 if (sceneId === 'street') {
                     currentSceneId = 'street';
                     loadPanorama(textures.street);
@@ -483,8 +454,6 @@
                     currentSceneId = 'room';
                     loadPanorama(textures.room);
                 }
-                
-                // При переключении панорамы сбрасываем угол обзора до комфортного (70)
                 if (!renderer.xr.isPresenting) {
                     camera.fov = 70;
                     camera.updateProjectionMatrix();
@@ -493,101 +462,179 @@
             });
         });
         
-        // --- VR ЛОГИКА (кастомная кнопка и статус) ---
+        // --- VR ЛОГИКА С ПОДДЕРЖКОЙ ГИРОСКОПА ---
         const customVRBtn = document.getElementById('customVRBtn');
         const vrStatusDiv = document.getElementById('vrSupportStatus');
+        
+        // Сохраняем ссылку на стандартный контроллер, чтобы временно отключать вращение мышью
+        let standardControlsEnabled = true;
+        
+        function disableOrbitControls(disable) {
+            if (disable) {
+                controls.enabled = false;
+                standardControlsEnabled = false;
+            } else {
+                controls.enabled = true;
+                standardControlsEnabled = true;
+            }
+        }
         
         async function updateVRStatus() {
             if (!('xr' in navigator)) {
                 vrStatusDiv.innerHTML = '❌ VR не поддерживается';
                 vrStatusDiv.classList.add('vr-error');
                 customVRBtn.disabled = true;
-                customVRBtn.style.opacity = '0.5';
                 return false;
             }
             try {
                 const supported = await navigator.xr.isSessionSupported('immersive-vr');
                 if (supported) {
-                    vrStatusDiv.innerHTML = '✅ VR готов';
+                    vrStatusDiv.innerHTML = '✅ VR готов (гироскоп)';
                     vrStatusDiv.style.color = '#aaffaa';
                     customVRBtn.disabled = false;
-                    customVRBtn.style.opacity = '1';
                     return true;
                 } else {
-                    vrStatusDiv.innerHTML = '⚠️ Нет VR гарнитуры';
+                    vrStatusDiv.innerHTML = '📱 VR через гироскоп (Cardboard)';
                     vrStatusDiv.style.color = '#ffaa66';
                     customVRBtn.disabled = false;
                     return false;
                 }
             } catch(err) {
-                vrStatusDiv.innerHTML = '⚠️ Ошибка WebXR';
+                vrStatusDiv.innerHTML = '⚠️ WebXR ошибка';
                 vrStatusDiv.classList.add('vr-error');
                 customVRBtn.disabled = true;
                 return false;
             }
         }
         
-        async function enterVR() {
-            if (!('xr' in navigator)) {
-                alert('Ваш браузер не поддерживает WebXR. Используйте Chrome/Edge на Android.');
-                return;
+        let isVRmodeActive = false;
+        
+        // Вход в VR-режим с гироскопом (эмуляция Cardboard)
+        async function enterVRWithGyro() {
+            if (renderer.xr.isPresenting) {
+                // Выход из WebXR если был
+                const session = renderer.xr.getSession();
+                if (session) await session.end();
             }
-            try {
-                const supported = await navigator.xr.isSessionSupported('immersive-vr');
-                if (!supported) {
-                    alert('VR режим недоступен. Нужна совместимая гарнитура или Cardboard.');
+            
+            // Запрашиваем гироскоп (iOS нужно разрешение)
+            if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+                try {
+                    await DeviceOrientationEvent.requestPermission();
+                    window.addEventListener('deviceorientation', handleOrientation);
+                } catch(e) {
+                    alert('Для VR с поворотом телефона нужно разрешение. Нажмите "Разрешить"');
                     return;
                 }
+            } else {
+                // Убедимся что слушатель активен
+                if (!window.hasGyroListener) {
+                    window.addEventListener('deviceorientation', handleOrientation);
+                    window.hasGyroListener = true;
+                }
+            }
+            
+            // Включаем гироскоп-управление
+            vrOrientationEnabled = true;
+            isVRmodeActive = true;
+            
+            // Отключаем OrbitControls (вращение мышью/пальцем)
+            disableOrbitControls(true);
+            
+            // Меняем FOV для VR эффекта (чуть шире для погружения)
+            camera.fov = 80;
+            camera.updateProjectionMatrix();
+            
+            // Прячем лишние подсказки
+            const hintBox = document.getElementById('hintBox');
+            if (hintBox) hintBox.style.opacity = '0.3';
+            
+            vrStatusDiv.innerHTML = '🥽 VR активен | Поворачивай телефон';
+            customVRBtn.textContent = '🚪 Выйти из VR';
+            
+            // Показываем тост с подсказкой
+            showToast('🎧 VR режим: поворачивайте телефон для осмотра');
+        }
+        
+        function exitVRWithGyro() {
+            vrOrientationEnabled = false;
+            isVRmodeActive = false;
+            
+            // Восстанавливаем управление OrbitControls
+            disableOrbitControls(false);
+            
+            // Восстанавливаем стандартный FOV
+            camera.fov = 70;
+            camera.updateProjectionMatrix();
+            
+            // Сбрасываем кватернион камеры, чтобы смотреть прямо
+            camera.quaternion.identity();
+            camera.rotation.order = 'YXZ';
+            
+            const hintBox = document.getElementById('hintBox');
+            if (hintBox) hintBox.style.opacity = '1';
+            
+            vrStatusDiv.innerHTML = '✅ VR готов (гироскоп)';
+            customVRBtn.textContent = '🥽 VR режим';
+            
+            showToast('Выход из VR. Управление мышью/пальцем восстановлено');
+        }
+        
+        function showToast(msg) {
+            let toast = document.querySelector('.orientation-toast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.className = 'orientation-toast';
+                document.body.appendChild(toast);
+            }
+            toast.textContent = msg;
+            toast.style.opacity = '1';
+            setTimeout(() => { toast.style.opacity = '0'; }, 2500);
+        }
+        
+        // Обработчик кастомной кнопки VR
+        customVRBtn.addEventListener('click', async () => {
+            if (isVRmodeActive) {
+                exitVRWithGyro();
+                // Если был активен WebXR, тоже завершаем
                 if (renderer.xr.isPresenting) {
                     const session = renderer.xr.getSession();
                     if (session) await session.end();
-                    return;
                 }
-                const session = await navigator.xr.requestSession('immersive-vr', {
-                    optionalFeatures: ['local-floor']
-                });
-                await renderer.xr.setSession(session);
-                vrStatusDiv.innerHTML = '🥽 В VR режиме';
-                customVRBtn.textContent = '🚪 Выйти из VR';
-                
-                session.addEventListener('end', () => {
-                    vrStatusDiv.innerHTML = '✅ VR готов';
-                    customVRBtn.textContent = '🥽 VR режим';
-                    // Восстановить FOV при выходе
-                    camera.fov = 70;
-                    camera.updateProjectionMatrix();
-                });
-            } catch (err) {
-                console.error(err);
-                vrStatusDiv.innerHTML = '❌ Ошибка входа';
-                alert('Не удалось войти в VR. Убедитесь, что сайт открыт по HTTPS.');
-            }
-        }
-        
-        customVRBtn.addEventListener('click', async () => {
-            if (renderer.xr.isPresenting) {
-                const session = renderer.xr.getSession();
-                if (session) await session.end();
-                vrStatusDiv.innerHTML = '✅ VR готов';
-                customVRBtn.textContent = '🥽 VR режим';
             } else {
-                await enterVR();
+                // Пытаемся войти в VR с гироскопом (это основной метод для телефона без шлема)
+                await enterVRWithGyro();
             }
         });
         
+        // Обработка реального WebXR (если подключена гарнитура, будет работать параллельно)
         renderer.xr.addEventListener('sessionstart', () => {
-            vrStatusDiv.innerHTML = '🥽 В VR режиме';
+            // Если WebXR сессия запущена, отключаем гироскоп, чтобы не конфликтовать
+            if (vrOrientationEnabled) exitVRWithGyro();
+            vrStatusDiv.innerHTML = '🥽 Гарнитура VR';
             customVRBtn.textContent = '🚪 Выйти из VR';
+            disableOrbitControls(true);
         });
         
         renderer.xr.addEventListener('sessionend', () => {
-            vrStatusDiv.innerHTML = '✅ VR готов';
-            customVRBtn.textContent = '🥽 VR режим';
-            camera.fov = 70;
-            camera.updateProjectionMatrix();
+            if (!isVRmodeActive) {
+                disableOrbitControls(false);
+                vrStatusDiv.innerHTML = '✅ VR готов (гироскоп)';
+                customVRBtn.textContent = '🥽 VR режим';
+                camera.fov = 70;
+                camera.updateProjectionMatrix();
+            }
         });
         
+        // Запрашиваем статус при старте
         updateVRStatus();
+        
+        // Автоматически запрашиваем разрешение на гироскоп для Android (без клика, но только если нужно)
+        // Для iOS оставляем кнопку разрешения, которая появится при первом нажатии на VR
+        if (!(typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function')) {
+            window.addEventListener('deviceorientation', handleOrientation);
+            window.hasGyroListener = true;
+        }
         
         // --- Адаптация под resize ---
         window.addEventListener('resize', onWindowResize, false);
@@ -599,25 +646,26 @@
         
         // --- Анимационный цикл ---
         function animate() {
-            if (!renderer.xr.isPresenting) {
-                controls.update();  // вращение от мыши/пальца
+            if (!renderer.xr.isPresenting && !vrOrientationEnabled) {
+                // Только если не в VR-гироскопе и не в WebXR, обновляем OrbitControls
+                if (controls.enabled) controls.update();
             }
             renderer.render(scene, camera);
             requestAnimationFrame(animate);
         }
         animate();
         
-        // Небольшая помощь: если мобильное устройство, напомним про жест
+        // Подсказка для мобильных устройств
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         if (isMobile) {
-            const hintDiv = document.querySelector('.hint-box');
+            const hintDiv = document.getElementById('hintBox');
             if (hintDiv) {
-                // Добавляем подсказку про два пальца, но оставляем кратко
-                hintDiv.innerHTML = `<span>🖐️ Вращай пальцем</span><span>🤏 Сведи/разведи для зума</span>`;
+                hintDiv.innerHTML = `<span>🖐️ Вращай пальцем</span><span>🤏 Жест: зум</span><span>🥽 Нажми VR для гироскопа</span>`;
             }
+            showToast('📱 Нажмите "VR режим" и поворачивайте телефон!');
         }
         
-        console.log('✅ Сайт готов: выдвижное меню справа, VR режим, зум в 5x, поддержка телефонов');
+        console.log('✅ Сайт готов: выдвижное меню, VR с поворотом телефона, зум 5x');
     </script>
 </body>
 </html>
