@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Панорама 360° - Улица / Комната</title>
+    <style>
+        body { margin: 0; overflow: hidden; font-family: Arial, sans-serif; }
+        .controls {
+            position: fixed;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            z-index: 100;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            padding: 10px;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(5px);
+            border-radius: 50px;
+            width: fit-content;
+            margin: 0 auto;
+        }
+        button {
+            padding: 10px 25px;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: 0.2s;
+            background: #1e2a3a;
+            color: white;
+        }
+        button:hover { background: #ff8800; transform: scale(1.02); }
+        .active { background: #ff8800; color: #1e2a3a; box-shadow: 0 0 10px rgba(255,136,0,0.5); }
+        .vr-btn { background: #5a2d8c; }
+        .vr-btn:hover { background: #8a4fc9; }
+        .info {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            background: rgba(0,0,0,0.5);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            z-index: 100;
+            pointer-events: none;
+        }
+        .hint {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.5);
+            color: #ccc;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 11px;
+            z-index: 100;
+            pointer-events: none;
+        }
+        @media (max-width: 600px) {
+            button { padding: 6px 15px; font-size: 12px; }
+            .info, .hint { font-size: 9px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="info">🌀 Панорама 360° | 🖱️ Мышь — вращение</div>
+    <div class="controls">
+        <button id="btnStreet" class="active">🏙️ Улица (street.jpg)</button>
+        <button id="btnRoom">🏠 Комната (room.jpg)</button>
+        <button id="btnVR" class="vr-btn">🥽 VR-режим</button>
+    </div>
+    <div class="hint">🖱️ Зажмите ЛКМ и тяните | 🖱️ Колесико — приближение</div>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.128.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.128.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { VRButton } from 'three/addons/webxr/VRButton.js';
+
+        // --- Настройка сцены ---
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x050510);
+        
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(0, 0, 0.1);
+        
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.xr.enabled = true;
+        document.body.appendChild(renderer.domElement);
+        
+        // Добавляем кнопку VR от Three.js (она появится автоматически в углу, но мы дублируем)
+        document.body.appendChild(VRButton.createButton(renderer));
+        
+        // --- Панорамная сфера ---
+        const geometry = new THREE.SphereGeometry(500, 64, 64);
+        let currentMaterial = null;
+        const sphere = new THREE.Mesh(geometry);
+        scene.add(sphere);
+        
+        // --- Загрузка текстур из папки img ---
+        // Пути к файлам: street.jpg и room.jpg в папке img
+        const textures = {
+            street: 'img/street.jpg',
+            room: 'img/room.jpg'
+        };
+        
+        let activeScene = 'street';
+        
+        function loadPanorama(imagePath) {
+            const loader = new THREE.TextureLoader();
+            loader.load(imagePath, 
+                (texture) => {
+                    texture.wrapS = THREE.RepeatWrapping;
+                    const material = new THREE.MeshBasicMaterial({
+                        map: texture,
+                        side: THREE.BackSide
+                    });
+                    sphere.material = material;
+                    currentMaterial = material;
+                    console.log('Загружено:', imagePath);
+                },
+                undefined,
+                (error) => {
+                    console.error('Ошибка загрузки:', imagePath, error);
+                    // Показываем ошибку цветом
+                    const fallbackMat = new THREE.MeshBasicMaterial({ color: 0xff3366, side: THREE.BackSide });
+                    sphere.material = fallbackMat;
+                    alert(`Не удалось загрузить ${imagePath}\nПроверьте, что файл существует в папке img/`);
+                }
+            );
+        }
+        
+        // Загружаем первую панораму (улица)
+        loadPanorama(textures.street);
+        
+        // --- Управление мышью (OrbitControls) ---
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableZoom = true;
+        controls.zoomSpeed = 0.8;
+        controls.rotateSpeed = 1.0;
+        controls.enablePan = false;
+        controls.target.set(0, 0, 0);
+        
+        // Колесико для приближения (FOV)
+        let defaultFOV = 75;
+        camera.fov = defaultFOV;
+        camera.updateProjectionMatrix();
+        
+        window.addEventListener('wheel', (e) => {
+            if (!renderer.xr.isPresenting) {
+                let delta = e.deltaY * 0.05;
+                let newFOV = camera.fov + delta;
+                newFOV = Math.min(120, Math.max(40, newFOV));
+                camera.fov = newFOV;
+                camera.updateProjectionMatrix();
+                e.preventDefault();
+            }
+        }, { passive: false });
+        
+        // --- Кнопки переключения ---
+        const btnStreet = document.getElementById('btnStreet');
+        const btnRoom = document.getElementById('btnRoom');
+        const btnVR = document.getElementById('btnVR');
+        
+        function setActiveButton(active) {
+            if (active === 'street') {
+                btnStreet.classList.add('active');
+                btnRoom.classList.remove('active');
+            } else {
+                btnRoom.classList.add('active');
+                btnStreet.classList.remove('active');
+            }
+        }
+        
+        btnStreet.addEventListener('click', () => {
+            if (activeScene === 'street') return;
+            activeScene = 'street';
+            setActiveButton('street');
+            loadPanorama(textures.street);
+        });
+        
+        btnRoom.addEventListener('click', () => {
+            if (activeScene === 'room') return;
+            activeScene = 'room';
+            setActiveButton('room');
+            loadPanorama(textures.room);
+        });
+        
+        // VR кнопка (запуск сессии)
+        btnVR.addEventListener('click', async () => {
+            if (renderer.xr.isPresenting) {
+                await renderer.xr.getSession()?.end();
+                return;
+            }
+            if ('xr' in navigator) {
+                const supported = await navigator.xr.isSessionSupported('immersive-vr');
+                if (supported) {
+                    // Пытаемся эмулировать клик на стандартной кнопке Three.js
+                    const nativeVRBtn = document.querySelector('button[title="Enter VR"]');
+                    if (nativeVRBtn) nativeVRBtn.click();
+                    else {
+                        const session = await navigator.xr.requestSession('immersive-vr');
+                        renderer.xr.setSession(session);
+                    }
+                } else {
+                    alert('Ваш браузер или устройство не поддерживают VR');
+                }
+            } else {
+                alert('WebXR не поддерживается');
+            }
+        });
+        
+        // --- Адаптация под размер окна ---
+        window.addEventListener('resize', onWindowResize);
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+        
+        // --- Анимационный цикл ---
+        function animate() {
+            if (!renderer.xr.isPresenting) {
+                controls.update();
+            }
+            renderer.render(scene, camera);
+            requestAnimationFrame(animate);
+        }
+        animate();
+        
+        console.log('Готово! Поместите street.jpg и room.jpg в папку img');
+    </script>
+</body>
+</html>
