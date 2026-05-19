@@ -248,27 +248,6 @@
             75% { transform: rotate(-15deg); }
         }
         
-        /* Плоский режим для обычных фото (не панорам) */
-        .flat-mode {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #000;
-            z-index: 50;
-            pointer-events: none;
-        }
-        .flat-image {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
-            box-shadow: 0 0 30px rgba(0,0,0,0.5);
-        }
-        
         @media (max-width: 700px) {
             .menu-panel { width: 210px; padding: 8px 6px 8px 12px; max-height: 70vh; }
             .scene-option { padding: 8px 10px; font-size: 11px; }
@@ -447,40 +426,28 @@
         
         window.addEventListener('touchend', () => { initialPinchDistance = 0; });
         
-        // --- ОПРЕДЕЛЕНИЕ ПАНОРАМА ЭТО ИЛИ НЕТ (проверка соотношения сторон) ---
-        // Панорама 360° обычно имеет соотношение 2:1 (ширина в 2 раза больше высоты)
-        // Допуск: от 1.8 до 2.2 считается панорамой
+        // --- ОПРЕДЕЛЕНИЕ ПАНОРАМА ЭТО ИЛИ НЕТ ---
         function isPanoramaImage(imgWidth, imgHeight) {
             const aspect = imgWidth / imgHeight;
-            // Классическая панорама 360°: aspect ≈ 2.0
-            // Также считаем панорамами изображения с aspect > 1.5 (широкие)
             return aspect >= 1.7 && aspect <= 2.4;
         }
         
-        // Флаг плоского режима
         let isFlatModeActive = false;
         
-        // Показ обычного фото (плоский режим)
         function showFlatImage(imageUrl) {
             isFlatModeActive = true;
-            // Скрываем 3D сферу
             sphere.visible = false;
-            // Показываем контейнер с плоским изображением
             flatImage.src = imageUrl;
             flatModeContainer.style.display = 'flex';
-            // Отключаем вращение камеры в 3D (оставляем только для плоского режима не нужно)
             controls.enabled = false;
-            // Для плоского режима не нужно вращение
         }
         
-        // Показ панорамы (3D сфера)
         function showPanorama(imageUrl) {
             isFlatModeActive = false;
             flatModeContainer.style.display = 'none';
             sphere.visible = true;
             controls.enabled = true;
             
-            // Загружаем текстуру на сферу
             const loader = new THREE.TextureLoader();
             loader.load(imageUrl, 
                 (texture) => {
@@ -490,7 +457,6 @@
                         side: THREE.BackSide
                     });
                     sphere.material = material;
-                    console.log('✅ Панорама загружена');
                     showToast('Панорама 360° загружена');
                 },
                 undefined,
@@ -503,54 +469,16 @@
             );
         }
         
-        // Умная загрузка изображения: определяем панорама или нет
-        function loadImageSmart(fileOrUrl, isFile = true, fileObj = null) {
-            showToast('Анализ изображения...');
-            
-            const processImage = (imgElement) => {
-                const width = imgElement.width;
-                const height = imgElement.height;
-                const isPanorama = isPanoramaImage(width, height);
-                
-                console.log(`Размер: ${width}x${height}, соотношение: ${(width/height).toFixed(2)}, панорама: ${isPanorama}`);
-                
-                if (isPanorama) {
-                    showToast('Обнаружена панорама 360°');
-                    if (isFile && fileObj) {
-                        const url = URL.createObjectURL(fileObj);
-                        showPanorama(url);
-                    } else {
-                        showPanorama(fileOrUrl);
-                    }
-                } else {
-                    showToast('Обычное фото (отображается в центре)');
-                    if (isFile && fileObj) {
-                        const url = URL.createObjectURL(fileObj);
-                        showFlatImage(url);
-                    } else {
-                        showFlatImage(fileOrUrl);
-                    }
-                }
-            };
-            
-            if (isFile && fileObj) {
-                const url = URL.createObjectURL(fileObj);
-                const img = new Image();
-                img.onload = () => {
-                    processImage(img);
-                    URL.revokeObjectURL(url);
-                };
-                img.onerror = () => {
-                    showToast('Ошибка загрузки изображения');
-                    URL.revokeObjectURL(url);
-                };
-                img.src = url;
-            } else {
-                const img = new Image();
-                img.onload = () => processImage(img);
-                img.onerror = () => showToast('Ошибка загрузки изображения');
-                img.src = fileOrUrl;
+        function showToast(msg, duration = 2000) {
+            let toast = document.querySelector('.loading-toast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.className = 'loading-toast';
+                document.body.appendChild(toast);
             }
+            toast.textContent = msg;
+            toast.style.display = 'block';
+            setTimeout(() => { toast.style.display = 'none'; }, duration);
         }
         
         // --- Управление сценами ---
@@ -587,7 +515,6 @@
                 showFlatImage(sceneUrl);
             }
             
-            // Обновляем активный класс
             document.querySelectorAll('.scene-option').forEach(opt => {
                 if (opt.getAttribute('data-scene-id') === sceneId) {
                     opt.classList.add('active-opt');
@@ -596,7 +523,6 @@
                 }
             });
             
-            // Сброс FOV
             if (!isVRmodeActive && !renderer.xr.isPresenting && isPanoramaFlag) {
                 camera.fov = 70;
                 camera.updateProjectionMatrix();
@@ -616,7 +542,6 @@
                 const width = img.width;
                 const height = img.height;
                 const isPan = isPanoramaImage(width, height);
-                const aspect = width / height;
                 
                 const id = 'custom_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
                 const name = file.name.length > 25 ? file.name.substr(0, 22) + '...' : file.name;
@@ -628,21 +553,17 @@
                     url: tempUrl,
                     isCustom: true,
                     originalName: file.name,
-                    isPanorama: isPan,
-                    aspectRatio: aspect
+                    isPanorama: isPan
                 });
                 
                 saveCustomScenes();
                 
-                // Переключаемся на новую сцену
                 if (isPan) {
                     showPanorama(tempUrl);
                 } else {
                     showFlatImage(tempUrl);
                 }
                 currentSceneId = id;
-                
-                URL.revokeObjectURL(tempUrl);
             };
             
             img.onerror = () => {
@@ -699,7 +620,7 @@
                     btn.className = 'scene-option';
                     if (currentSceneId === scene.id) btn.classList.add('active-opt');
                     btn.setAttribute('data-scene-id', scene.id);
-                    const badge = scene.isPanorama ? '360°' : '📷 фото';
+                    const badge = scene.isPanorama ? '360°' : '📷';
                     btn.innerHTML = `
                         <span class="opt-icon">${scene.isPanorama ? '🌐' : '🖼️'}</span>
                         <span class="opt-name">${scene.name}</span>
@@ -749,18 +670,6 @@
             }
             closeMenu();
         });
-        
-        function showToast(msg, duration = 2000) {
-            let toast = document.querySelector('.loading-toast');
-            if (!toast) {
-                toast = document.createElement('div');
-                toast.className = 'loading-toast';
-                document.body.appendChild(toast);
-            }
-            toast.textContent = msg;
-            toast.style.display = 'block';
-            setTimeout(() => { toast.style.display = 'none'; }, duration);
-        }
         
         // --- VR ЛОГИКА ---
         let vrOrientationEnabled = false;
@@ -843,4 +752,60 @@
                     });
                 } catch(e) { alert('VR не доступен'); }
             } else {
-                alert(isFlatModeActive ? 'Обычные фото не поддерживают VR' : 'VR режим доступен на телефона
+                alert(isFlatModeActive ? 'Обычные фото не поддерживают VR' : 'VR режим доступен на телефонах с гироскопом');
+            }
+        });
+        
+        renderer.xr.addEventListener('sessionstart', () => {
+            if (isVRmodeActive) exitVRWithGyro();
+            controls.enabled = false;
+        });
+        renderer.xr.addEventListener('sessionend', () => {
+            if (!isVRmodeActive) controls.enabled = true;
+        });
+        
+        // --- ИНИЦИАЛИЗАЦИЯ ---
+        function setupUIHints() {
+            const hintBox = document.getElementById('hintBox');
+            if (isPhone) {
+                hintBox.innerHTML = `<span>🖐️ Вращай пальцем</span><span>🤏 Жест: зум</span><span>🥽 Нажми VR для гироскопа</span>`;
+                vrStatusDiv.innerHTML = '📱 Нажми VR → поворачивай телефон';
+            } else {
+                hintBox.innerHTML = `<span>🖱️ Мышь: вращение</span><span>🔍 Колесико: приближение</span><span>➕ Кнопка + для своего фото</span>`;
+                vrStatusDiv.innerHTML = '🖱️ Управление мышью | + загрузить фото';
+            }
+        }
+        
+        setupUIHints();
+        loadCustomScenesFromStorage();
+        
+        // Пытаемся загрузить стартовую панораму (если файлы есть)
+        const testImg = new Image();
+        testImg.onload = () => showPanorama(defaultScenes[0].url);
+        testImg.onerror = () => {
+            console.warn('Файл img/street.jpg не найден, показываем заглушку');
+            const fallbackMat = new THREE.MeshBasicMaterial({ color: 0x335588, side: THREE.BackSide });
+            sphere.material = fallbackMat;
+        };
+        testImg.src = defaultScenes[0].url;
+        
+        // --- АНИМАЦИЯ ---
+        function animate() {
+            if (!renderer.xr.isPresenting && !vrOrientationEnabled && controls.enabled) {
+                controls.update();
+            }
+            renderer.render(scene, camera);
+            requestAnimationFrame(animate);
+        }
+        animate();
+        
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+        
+        console.log('✅ Сайт готов: панорамы и обычные фото, VR на телефонах');
+    </script>
+</body>
+</html>
